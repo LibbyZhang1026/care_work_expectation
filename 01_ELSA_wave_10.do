@@ -243,14 +243,15 @@ label values r10gccare1w yesnocare
 *wave 10 respondent provided care to grandchildren last week
 
 gen r10gkcare1w = .
-replace r10gkcare1w = .k if digran==2
+replace r10gkcare1w = 0 if dignmy==0 | dignmy==-1
 replace r10gkcare1w = .n if askinst==1
 replace r10gkcare1w = .p if askpx==1
-replace r10gkcare1w = 0 if digran!=2 & (ercaa==2)
-replace r10gkcare1w = 0 if digran!=2 & ercamgc==0 
+replace r10gkcare1w = 0 if dignmy>0 & (ercaa==2)
+replace r10gkcare1w = 0 if dignmy>0 & ercamgc==0 
 replace r10gkcare1w = 1 if ercamgc==1
 label variable r10gkcare1w "r10gkcare1w:w10 r provided informal care to grandchildren last week"
 label values r10gkcare1w yesnocare
+rename dignmy r10ngc
 
 *wave 10 respondent provided care to relatives last week  (parents; in law and others)
 gen r10grcare1w = .
@@ -624,7 +625,7 @@ label variable r10pripen "Enrolled in private pension (receiving or not receivin
 gen inw10 = 1
 
 
-keep idauniq r10agey inw10 ragender raracem r10educ_e r*mstat r*age_cat r*shlt r*adltot6 r*iadltot2_e r*iadltot1_e h*hownrnt r*child r*livpar r*work r*liv10 r*workat r*workata r*workl65 r*workat70 r*workat70f r*gcare1m r*gcare1w r*gscare1w r*gccare1w r*gkcare1w r*grcare1w r*gcareinhh1w r*gcarehpw r*gcaresck h*hhres r*lbrf_e r*soc2000 r*jhours r*jphysl r*jcpen r*pripen r*pubpen 
+keep idauniq r10agey inw10 ragender raracem r10educ_e r*mstat r*age_cat r*shlt r*adltot6 r*iadltot2_e r*iadltot1_e h*hownrnt r*child r*livpar r*work r*liv10 r*workat r*workata r*workl65 r*workat70 r*workat70f r*gcare1m r*gcare1w r*gscare1w r*gccare1w r*gkcare1w r*grcare1w r*gcareinhh1w r*gcarehpw r*gcaresck h*hhres r*lbrf_e r*soc2000 r*jhours r*jphysl r*jcpen r*pripen r*pubpen r*ngc
  
 
 save "${temp}\00_wave10.dta", replace
