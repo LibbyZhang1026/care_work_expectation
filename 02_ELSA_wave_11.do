@@ -19,7 +19,7 @@ gen hhsid = idahhw11*10 + cpid
 vlookup hhsid, generate(s11idauniq) key(hhid) value(idauniq)
 
 *********************
-* Socio-demogrpahic *
+**# Socio-demogrpahic *
 *********************
 
 * gender
@@ -105,7 +105,7 @@ label variable r11nhmliv "r11nhmliv:w11 R Lives in institution at interview"
 
 
 *********************
-* work expectations *
+**# work expectations *
 *********************
 
 * wave 11 respondent probability of living to 75-120 
@@ -131,6 +131,11 @@ replace r11liv10a = 110 if indager > 104 & indager <= 109
 replace r11liv10a = 120 if indager > 109 & indager <= 119
 label variable r11liv10a "r11liv10a:w10 R age used in live 75-120"
 
+
+* subjective life expectancy of people aged < 70: probability of age 85
+gen r11le85 = exlo90 if exlo90>=0
+replace r11le85 = 0 if exlo80==0 & r11agey<70
+// missing: 117 don't know or refuse; 275 proxy
 
 * wave 11 respondent probability of working after age
 gen r11workat = .
@@ -197,9 +202,12 @@ replace r11workl65 = exhlim if inrange(exhlim,0,100)
 label variable r11workl65 "r11workl65:w11 R probability of work limiting health problem"
 
 
+* future financial concern
+gen r11finan= exrslf if exrslf>=0
+
 
 *******************
-* care provision  *
+**# care provision *
 *******************
 
 *wave 11 respondent provided any informal care last month
@@ -224,9 +232,7 @@ label values r11gcare1w yesnocare
 
 *wave 11 respondent give care to long-term sick/disabled
 gen r11gcaresck = .
-replace r11gcaresck = .r if erresck== -9
-replace r11gcaresck = .d if erresck== -8
-replace r11gcaresck = .i if erresck== -1
+replace r11gcaresck = . if inlist(erresck, -9, -8, -1)
 replace r11gcaresck = .n if askinst==1
 replace r11gcaresck = .p if askpx==1
 replace r11gcaresck = 0 if erresck==2 
@@ -237,7 +243,8 @@ label values r11gcaresck yesnocare
 
 * wave 11 respondent give care to spouse
 gen r11gscare1w = .
-replace r11gscare1w = .s if inrange(r11mstat,4,8)
+replace r11gscare1w = 0 if inrange(r11mstat,4,8)
+replace r11gscare1w = . if ercaa<0
 replace r11gscare1w = .n if askinst==1
 replace r11gscare1w = .p if askpx==1
 replace r11gscare1w = 0 if inlist(r11mstat,1,3) & (ercaa==2)
@@ -249,7 +256,8 @@ label values r11gscare1w yesnocare
 
 *wave 11 respondent provided care to children last week
 gen r11gccare1w = .
-replace r11gccare1w = .c if r11child==0
+replace r11gccare1w = 0 if r11child==0
+replace r11gccare1w = . if ercaa<0
 replace r11gccare1w = .n if askinst==1
 replace r11gccare1w = .p if askpx==1
 replace r11gccare1w = 0 if r11child!=0 & (ercaa==2)
@@ -263,6 +271,7 @@ label values r11gccare1w yesnocare
 
 gen r11gkcare1w = .
 replace r11gkcare1w = 0 if dignmy==0 | dignmy==-1
+replace r11gkcare1w = . if ercaa<0
 replace r11gkcare1w = .n if askinst==1
 replace r11gkcare1w = .p if askpx==1
 replace r11gkcare1w = 0 if dignmy>0 & (ercaa==2)
@@ -273,13 +282,26 @@ label values r11gkcare1w yesnocare
 rename dignmy r11ngc
 
 
-*wave 11 respondent provided care to relatives last week  (parents; in law and others)
+*wave 11 respondent provided care to parents last week
+gen r11gpcare1w = .
+replace r11gpcare1w = .n if askinst==1
+replace r11gpcare1w = 0 if falive==2 & malive==2
+replace r11gpcare1w = . if ercaa<0
+replace r11gpcare1w = .p if askpx==1
+replace r11gpcare1w = 0 if ercaa==2
+replace r11gpcare1w = 0 if ercampa==0 
+replace r11gpcare1w = 1 if ercampa==1 
+label variable r11gpcare1w "r11gpcare1w:w11 r provided informal care to own parents last week"
+label values r11gpcare1w yesnocare
+
+
+*wave 11 respondent provided care to other relatives last week  
 gen r11grcare1w = .
 replace r11grcare1w = .n if askinst==1
 replace r11grcare1w = .p if askpx==1
 replace r11grcare1w = 0 if ercaa==2
-replace r11grcare1w = 0 if ercampa==0 | ercampl==0 | ercamor==0 
-replace r11grcare1w = 1 if ercampa==1 | ercampl==1 | ercamor==1
+replace r11grcare1w = 0 if ercampl==0 | ercamor==0 
+replace r11grcare1w = 1 if ercampl==1 | ercamor==1
 label variable r11grcare1w "r11grcare1w:w11 r provided informal care to relatives last week"
 label values r11grcare1w yesnocare
 
@@ -304,7 +326,7 @@ label variable r11gcarehpw "r11gcarehpw:w11 # hours r provided care last week"
 
 
 ***********
-* Health  *
+**# Health *
 ***********
 
 ** ADL IADL Mobility **
@@ -347,11 +369,23 @@ replace r11shlt=.d if hehelf==-8
 replace r11shlt=.p if hehelf==-1
 
 
+* mental health
+gen cesda = 2- psceda if psceda>=0
+gen cesdb = 2- pscedb if pscedb>=0
+gen cesdc = 2- pscedc if pscedc>=0
+gen cesdd = pscedd-1 if pscedd>=0
+gen cesde = 2- pscede if pscede>=0
+gen cesdf = pscedf-1 if pscedf>=0
+gen cesdg = 2- pscedg if pscedg>=0
+gen cesdh = 2- pscedh if pscedh>=0
 
+
+egen r11cesd = rowtotal(cesda - cesdh), missing
+rename cesdh r11going
 
 
 *******************
-* economic status *
+**# economic status *
 *******************
 
 * work status 
@@ -433,7 +467,7 @@ spouse r11hownrnt, result(s11hownrnt) wave(11)
 label variable s11hownrnt "s11hownrnt:w11 whether s owns home"
 label values s11hownrnt homeown
 
-*wave 10 household whether own home
+*wave 11 household whether own home
 gen h11hownrnt = .
 replace h11hownrnt = min(r11hownrnt, s11hownrnt) if !mi(r11hownrnt) | !mi(s11hownrnt)
 label variable h11hownrnt "h11hownrnt:w11 whether own home"
@@ -561,10 +595,18 @@ replace r11pripen = 1 if wpnpens >0 & wpnpens<.
 label variable r11pripen "Enrolled in private pension (receiving or not receiving)"
 
 
+* non pension wealth
+merge 1:1 idauniq using "$finance11", keepusing(nettotw_bu_s) nogen
+gen r11hwealth = nettotw_bu_s
+
+
+
+renvars disib gor , prefix(r11)
+
 
 gen inw11 = 1
 
 
-keep idauniq r*agey inw* ragender r11racem r11educ_e r*mstat r*age_cat r*shlt r*adltot6 r*iadltot2_e r*iadltot1_e h*hownrnt r*child r*livpar r*work r*liv10 r*workat r*workata r*workl65  r*workat70 r*workat70f  r*gcare1m r*gcare1w r*gscare1w r*gccare1w r*gkcare1w r*grcare1w r*gcareinhh1w r*gcarehpw r*gcaresck h*hhres r*lbrf_e r*soc2000 r*jhours r*jphysl r*pripen r*pubpen r*ngc
+keep idauniq r*agey inw* ragender r11racem r11educ_e r*mstat r*age_cat r*shlt r*adltot6 r*iadltot2_e r*iadltot1_e h*hownrnt r*child r*livpar r*work r*liv10 r*workat r*workata r*workl65  r*workat70 r*workat70f  r*gcare1m r*gcare1w r*gscare1w r*gccare1w r*gkcare1w r*grcare1w r*gpcare1w r*gcareinhh1w r*gcarehpw r*gcaresck h*hhres r*lbrf_e r*soc2000 r*jhours r*jphysl r*pripen r*pubpen r*ngc r*hwealth r*le85  r*disib r*gor r*cesd r*going r*finan
 
 save "${temp}\00_wave11.dta", replace

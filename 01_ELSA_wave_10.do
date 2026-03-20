@@ -86,7 +86,7 @@ label variable r10nhmliv "r10nhmliv:w10 R Lives in institution at interview"
 
 
 *********************
-* work expectations *
+**# work expectations *
 *********************
 
 * wave 10 respondent probability of living to 75-120 
@@ -111,6 +111,12 @@ replace r10liv10a = 105 if indager > 99 & indager <= 104
 replace r10liv10a = 110 if indager > 104 & indager <= 109
 replace r10liv10a = 120 if indager > 109 & indager <= 119
 label variable r10liv10a "r10liv10a:w10 R age used in live 75-120"
+
+
+* subjective life expectancy of people aged < 70: probability of age 85
+gen r10le85 = exlo90 if exlo90>=0
+replace r10le85 = 0 if exlo80==0 & r10agey<70
+// missing: 110 don't know or refuse; 240 proxy
 
 
 * wave 10 respondent probability of working after age
@@ -178,9 +184,12 @@ replace r10workl65 = exhlim if inrange(exhlim,0,100)
 label variable r10workl65 "r10workl65:w10 R probability of work limiting health problem"
 
 
+* future financial concern
+gen r10finan= exrslf if exrslf>=0
+
 
 *******************
-* care provision  *
+**# care provision  *
 *******************
 
 *wave 10 respondent provided any informal care last month
@@ -205,9 +214,7 @@ label values r10gcare1w yesnocare
 
 *wave 10 respondent give care to long-term sick/disabled
 gen r10gcaresck = .
-replace r10gcaresck = .r if erresck== -9
-replace r10gcaresck = .d if erresck== -8
-replace r10gcaresck = .i if erresck== -1
+replace r10gcaresck = . if inlist(erresck, -9, -8, -1)
 replace r10gcaresck = .n if askinst==1
 replace r10gcaresck = .p if askpx==1
 replace r10gcaresck = 0 if erresck==2 
@@ -218,7 +225,8 @@ label values r10gcaresck yesnocare
 
 * wave 10 respondent give care to spouse
 gen r10gscare1w = .
-replace r10gscare1w = .s if inrange(r10mstat,4,8)
+replace r10gscare1w = 0 if inrange(r10mstat,4,8)
+replace r10gscare1w = . if ercaa<0
 replace r10gscare1w = .n if askinst==1
 replace r10gscare1w = .p if askpx==1
 replace r10gscare1w = 0 if inlist(r10mstat,1,3) & (ercaa==2)
@@ -226,11 +234,12 @@ replace r10gscare1w = 0 if inlist(r10mstat,1,3) & ercamsp==0
 replace r10gscare1w = 1 if ercamsp==1
 label variable r10gscare1w "r10gscare1w:w10 r provided informal care to spouse last week"
 label values r10gscare1w yesnocare
-
+// 5 missing due to r10mstat is missing
 
 *wave 10 respondent provided care to children last week
 gen r10gccare1w = .
-replace r10gccare1w = .c if r10child==0
+replace r10gccare1w = 0 if r10child==0
+replace r10gccare1w = . if ercaa<0
 replace r10gccare1w = .n if askinst==1
 replace r10gccare1w = .p if askpx==1
 replace r10gccare1w = 0 if r10child!=0 & (ercaa==2)
@@ -244,6 +253,7 @@ label values r10gccare1w yesnocare
 
 gen r10gkcare1w = .
 replace r10gkcare1w = 0 if dignmy==0 | dignmy==-1
+replace r10gkcare1w = . if ercaa<0
 replace r10gkcare1w = .n if askinst==1
 replace r10gkcare1w = .p if askpx==1
 replace r10gkcare1w = 0 if dignmy>0 & (ercaa==2)
@@ -252,14 +262,28 @@ replace r10gkcare1w = 1 if ercamgc==1
 label variable r10gkcare1w "r10gkcare1w:w10 r provided informal care to grandchildren last week"
 label values r10gkcare1w yesnocare
 rename dignmy r10ngc
+//dignmy has 6 missing
 
-*wave 10 respondent provided care to relatives last week  (parents; in law and others)
+*wave 10 respondent provided care to parents last week
+gen r10gpcare1w = .
+replace r10gpcare1w = .n if askinst==1
+replace r10gpcare1w = 0 if falive==2 & malive==2
+replace r10gpcare1w = . if ercaa<0
+replace r10gpcare1w = .p if askpx==1
+replace r10gpcare1w = 0 if ercaa==2
+replace r10gpcare1w = 0 if ercampa==0 
+replace r10gpcare1w = 1 if ercampa==1 
+label variable r10gpcare1w "r10gpcare1w:w10 r provided informal care to own parents last week"
+label values r10gpcare1w yesnocare
+
+
+*wave 10 respondent provided care to other relatives last week  
 gen r10grcare1w = .
 replace r10grcare1w = .n if askinst==1
 replace r10grcare1w = .p if askpx==1
 replace r10grcare1w = 0 if ercaa==2
-replace r10grcare1w = 0 if ercampa==0 | ercampl==0 | ercamor==0 
-replace r10grcare1w = 1 if ercampa==1 | ercampl==1 | ercamor==1
+replace r10grcare1w = 0 if ercampl==0 | ercamor==0 
+replace r10grcare1w = 1 if ercampl==1 | ercamor==1
 label variable r10grcare1w "r10grcare1w:w10 r provided informal care to relatives last week"
 label values r10grcare1w yesnocare
 
@@ -283,7 +307,7 @@ replace r10gcarehpw = ercac if inrange(ercac,0,168)
 label variable r10gcarehpw "r10gcarehpw:w10 # hours r provided care last week"
 
 ***********
-* Health  *
+**# Health  *
 ***********
 
 ** ADL IADL Mobility **
@@ -319,17 +343,29 @@ egen r10iadltot1_e= anycount(headlph headlmo headlme headlsp headlpr headlma hea
 replace r10iadltot1_e=. if headl96<0
 
 
-*Self rated Health
+* self rated Health
 clonevar r10shlt = hehelf
 replace r10shlt=.d if hehelf==-8
 replace r10shlt=.p if hehelf==-1
 
 
+* mental health
+gen cesda = 2- psceda if psceda>=0
+gen cesdb = 2- pscedb if pscedb>=0
+gen cesdc = 2- pscedc if pscedc>=0
+gen cesdd = pscedd-1 if pscedd>=0
+gen cesde = 2- pscede if pscede>=0
+gen cesdf = pscedf-1 if pscedf>=0
+gen cesdg = 2- pscedg if pscedg>=0
+gen cesdh = 2- pscedh if pscedh>=0
 
+
+egen r10cesd = rowtotal(cesda - cesdh), missing
+rename cesdh r10going
 
 
 *******************
-* economic status *
+**# economic status *
 *******************
 
 * work status 
@@ -339,7 +375,7 @@ replace r10work = 0 if wpactse==0 & wpactpw==0
 
 {
 * income 
-merge 1:1 idauniq using "$finance", nogen
+merge 1:1 idauniq using "$finance10", nogen
 
 * income from pension & annuity
 gen r10itpena = .
@@ -556,7 +592,7 @@ replace r10soc2000 = 23 if w10soc2000r==82
 replace r10soc2000 = 24 if w10soc2000r==91
 replace r10soc2000 = 25 if w10soc2000r==92
 
-merge 1:1 idauniq using "${elsa}\h_elsa_g3.dta", keepusing (r9soc2000) gen(merge_h1)
+merge 1:1 idauniq using "${elsa}\gh_elsa_h.dta", keepusing (r9soc2000) gen(merge_h1)
 drop if merge_h1==2
 replace r10soc2000 = r9soc2000 if r10soc2000==. & r10work==1 & wpstj==1 & inrange(r9soc2000,1,25)
 replace r10soc2000 = .w if r10work==0
@@ -583,7 +619,6 @@ label variable r10jphysl "r10jphysl:w10 r Level of phys effort required in cur j
 
 
 * receiving pension
-
 * receive any pension from current job
 gen r10jcpen = pp_occ if inrange(pp_occ,0,1)
 replace r10jcpen = .w if pp_occ==0 & inlist(wpdes,1,4,5,6)
@@ -601,7 +636,7 @@ replace r10pubpen = 1 if perid != iapid & askpx==1 & ///
 label variable r10pubpen "r10pubpen:w10 r receives public pension"
 label values r10pubpen yesnopen
 
-*wave 11 financial respondent's spouse receives public pension
+*wave 10 financial respondent's spouse receives public pension
 gen s10pubpen = .
 replace s10pubpen = 0 if perid == iapid & ///
                        (iaspen == 2 | (iaspen == 1 & iaspw == 1))
@@ -621,11 +656,16 @@ replace r10pripen = 1 if wpnpens >0 & wpnpens<.
 label variable r10pripen "Enrolled in private pension (receiving or not receiving)"
 
 
+* non pension wealth
+merge 1:1 idauniq using "$finance10", keepusing(nettotw_bu_s) nogen
+gen r10hwealth = nettotw_bu_s
+
+
 
 gen inw10 = 1
 
 
-keep idauniq r10agey inw10 ragender raracem r10educ_e r*mstat r*age_cat r*shlt r*adltot6 r*iadltot2_e r*iadltot1_e h*hownrnt r*child r*livpar r*work r*liv10 r*workat r*workata r*workl65 r*workat70 r*workat70f r*gcare1m r*gcare1w r*gscare1w r*gccare1w r*gkcare1w r*grcare1w r*gcareinhh1w r*gcarehpw r*gcaresck h*hhres r*lbrf_e r*soc2000 r*jhours r*jphysl r*jcpen r*pripen r*pubpen r*ngc
+keep idauniq r10agey inw10 ragender raracem r10educ_e r*mstat r*age_cat r*shlt r*adltot6 r*iadltot2_e r*iadltot1_e h*hownrnt r*child r*livpar r*work r*liv10 r*workat r*workata r*workl65 r*workat70 r*workat70f r*gcare1m r*gcare1w r*gscare1w r*gccare1w r*gkcare1w r*grcare1w r*gpcare1w r*gcareinhh1w r*gcarehpw r*gcaresck h*hhres r*lbrf_e r*soc2000 r*jhours r*jphysl r*jcpen r*pripen r*pubpen r*ngc r*hwealth r*le85 r*disib r*gor r*cesd r*going r*psagf r*finan
  
 
 save "${temp}\00_wave10.dta", replace
