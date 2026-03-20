@@ -20,6 +20,10 @@ capture log close // close open log files if need be
 ssc install outreg2
 ssc install coefplot, replace
 ssc install psmatch2
+ssc install cem
+ssc install kmatch
+ssc install moremata
+ssc install binscatter
 
 
 ********************************************************************************
@@ -47,9 +51,10 @@ global workingDir 	"C:\Users\j53735jz\OneDrive - The University of Manchester\Re
 global data			"${workingDir}\01_data" 				
 	
 // Original data --> never change these files 
-global elsa	"C:\Users\j53735jz\OneDrive - The University of Manchester\Research\DATA\ELSA0_11\UKDA-5050-stata\stata\stata13_se"
-global g3 "${elsa}\h_elsa_g3"
-global elsa11 "${elsa}\wave_11_elsa_data_eul_v1.dta"
+//global elsa	"C:\Users\j53735jz\OneDrive - The University of Manchester\Research\DATA\ELSA0_11\UKDA-5050-stata\stata\stata13_se"
+global elsa	"C:\Users\j53735jz\OneDrive - The University of Manchester\Research\DATA\ELSA_0_11\stata\stata13_se"
+global g3 "${elsa}\gh_elsa_h"
+global elsa11 "${elsa}\wave_11_elsa_data_eul.dta"
 global elsa10 "${elsa}\wave_10_elsa_data_eul_v4.dta"
 global elsa9 "${elsa}\wave_9_elsa_data_eul_v2.dta"
 global elsa8 "${elsa}\wave_8_elsa_data_eul_v2.dta"
@@ -57,9 +62,9 @@ global elsa7 "${elsa}\wave_7_elsa_data.dta"
 global elsa6 "${elsa}\wave_6_elsa_data_v2.dta"
 global elsa5 "${elsa}\wave_5_elsa_data_v4.dta"
 global elsa4 "${elsa}\wave_4_elsa_data_v3.dta"
-global finance "${elsa}\wave_10_financial_derived_variables.dta"
-global finance "${elsa}\wave_10_financial_derived_variables.dta"
-
+global finance10 "${elsa}\wave_10_financial_derived_variables.dta"
+global finance11 "${elsa}\wave_11_financial_derived_variables.dta"
+global ifs11 "${elsa}\wave_11_ifs_derived_variables.dta"
 	
 	// temporary data files (usually to be deleted at the end of each do-file) 
 	global temp 		"${data}\02_temp" 					
